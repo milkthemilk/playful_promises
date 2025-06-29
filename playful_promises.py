@@ -9,7 +9,7 @@ dp = Dispatcher()
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
-    await message.answer("Привет! Я работаю на Render!")
+    await message.answer("Привет! Я работаю на Render! Жопа")
 
 async def main():
     await dp.start_polling(bot)
