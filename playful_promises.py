@@ -75,7 +75,7 @@ async def cmd_give(message: types.Message):
         await message.answer("Такой пользователь не найден или не зарегистрировался. :(")
         return
     to_user_id = row[0]
-    if to_user_id == message.from_user_id:
+    if to_user_id == message.from_user.id:
         await message.answer("Хитро, но себе начислять нельзя. :)")
         return
     cursor.execute(
