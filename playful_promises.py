@@ -3,7 +3,7 @@ from aiogram.filters import Command
 import asyncio
 import sqlite3
 
-API_TOKEN = '7919896744:AAH6lnmKVFX5i1fCj7V9XF7V5y3E1ODgUM8'
+API_TOKEN = ''
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
