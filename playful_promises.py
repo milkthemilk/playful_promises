@@ -1,9 +1,10 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
+import os
 import asyncio
 import sqlite3
 
-API_TOKEN = ''
+API_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
