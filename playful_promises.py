@@ -149,7 +149,7 @@ async def cmd_settask(message: types.Message):
     await message.answer(
         f"Задание создано:\n\n\"{description}\"\nВознаграждение: {reward} токенов."
     )
-     cursor.execute(
+    cursor.execute(
         "SELECT user_id FROM users WHERE user_id != ?",
         (message.from_user.id,)
     )   
