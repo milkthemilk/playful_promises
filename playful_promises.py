@@ -127,18 +127,21 @@ async def cmd_settask(message: types.Message):
     if text == "/settask":
         await message.answer("Формат команды: /settask описание задания /вознаграждение")
         return
-    try:
-        parts = text.split("/", 1)
-        description = parts[0].replace("/settask", "").strip()
-        reward = int(parts[1].strip())
-    except Exception:
+    parts = text.replace("/settask", "").strip().split()
+    if len(parts) < 2:
         await message.answer("Убедись, что всё написано правильно. ^^,")
         return
-    if not description:
-        await message.answer("Описание задания не может быть пустым. :]")
+    reward_part = parts[-1]
+    description = " ".join(parts[:-1])
+    if not reward_part.isdigit():
+        await message.answer("А почему награды нет никакой? :(")
         return
+    reward = int(reward_part)
     if reward <= 0:
-        await message.answer("А почему нагрды нет никакой? :(")
+        await message.answer("Вознаграждение должно быть больше нуля. :)")
+        return
+    if not description:
+        await message.answer("Описание задания не может быть пустым. :)")
         return
     # Сохраняем задание и увдемоляем пользователей
     cursor.execute(
