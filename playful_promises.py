@@ -126,7 +126,7 @@ async def cmd_settask(message: types.Message):
     text = message.text.strip().replace("\n", " ")
     if "/" not in text:
         await message.answer("Формат команды: /settask описание задания /вознаграждение")
-    return
+        return
     try:
         parts = text.split("/", 1)
         description = parts[0].replace("/settask", "").strip()
