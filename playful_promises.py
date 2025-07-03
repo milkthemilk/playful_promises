@@ -27,7 +27,7 @@ cursor.execute('''
 CREATE TABLE IF NOT EXISTS tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_id INTEGER,
-    decription TEXT,
+    description TEXT,
     reward INTEGER
 )
 ''')
