@@ -63,16 +63,13 @@ async def cmd_give(message: types.Message):
     except ValueError:
         await message.answer("Нужно указать число виштокенов. :)")
         return
-    if amount <= 0:
-        await message.answer("Количество должно быть больше нуля. :)")
-        return
     cursor.execute(
         "SELECT user_id FROM users WHERE username = ?",
         (to_username,)
     )
     row = cursor.fetchone()
     if not row:
-        await message.answer("Такой пользователь не найден или не зарегистрировался. :(")
+        await message.answer("Такой пользователь не найден. :(")
         return
     to_user_id = row[0]
     if to_user_id == message.from_user.id:
@@ -85,6 +82,10 @@ async def cmd_give(message: types.Message):
     conn.commit()
     await message.answer(
         f"Вы успешно отправили {amount} виштокенов @{to_username}!"
+    )
+    await bot.send_message(
+        to_user_id,
+        f"Вам начислили {amount} виштокенов от @{message.from_user.username} ! :)"
     )
 
 @dp.message(Command("users"))
