@@ -124,7 +124,7 @@ async def cmd_give(message: types.Message):
 @dp.message(Command("settask"))
 async def cmd_settask(message: types.Message):
     text = message.text.strip().replace("\n", " ")
-    if "/" not in text:
+    if len(parts) < 3:
         await message.answer("Формат команды: /settask описание задания /вознаграждение")
         return
     try:
