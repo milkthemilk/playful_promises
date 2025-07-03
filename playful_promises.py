@@ -22,6 +22,16 @@ CREATE TABLE IF NOT EXISTS users (
 )
 ''')
 conn.commit()
+# Таблица заданий
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    owner_id INTEGER,
+    decription TEXT,
+    reward INTEGER
+)
+''')
+conn.commit()
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -35,11 +45,31 @@ async def cmd_start(message: types.Message):
         "Привет! Я трекер желаний. :)\n\n"
         "Регистрация успешна.\n"
         "Команды:\n"
+        "/users - показать список юзеров\n"
         "/balance - проверить баланс\n"
         "/give - начислить виштокены за хорошее поведение или выполнение задания\n"
-        "/users - показать список юзеров\n"
+        "/settask - добавить задание\n"
+        "/tasks - посмотреть список заданий\n"
+        "/amendtask - заменить задание\n"
+        "/deletetask - удалить задание\n"
+        "/taskdone - отправить запрос о выполнении задания\n"
         "(скоро появятся другие команды)"
     )
+
+@dp.message(Command("users"))
+async def cmd_users(message: types.Message):
+    cursor.execute(
+        "SELECT username, balance FROM users"
+    )
+    rows = cursor.fetchall()
+    if not rows:
+        await message.answer("Пользователи пока не зарегистрированы.")
+        return
+    text = "Список участников:\n"
+    for username, balance in rows:
+        display_name = f"@{username}" if username else "(без имени)"
+        text += f"{display_name} — {balance} виштокенов\n"
+    await message.answer(text)
 
 @dp.message(Command("balance"))
 async def cmd_balance(message: types.Message):
@@ -62,6 +92,9 @@ async def cmd_give(message: types.Message):
         amount = int(parts[2])
     except ValueError:
         await message.answer("Нужно указать число виштокенов. :)")
+        return
+    if amount <=0:
+        await message.answer("Количество должно быть больше ноля.")
         return
     cursor.execute(
         "SELECT user_id FROM users WHERE username = ?",
@@ -88,21 +121,44 @@ async def cmd_give(message: types.Message):
         f"Вам начислили {amount} виштокенов от @{message.from_user.username} ! :)"
     )
 
-@dp.message(Command("users"))
-async def cmd_users(message: types.Message):
-    cursor.execute(
-        "SELECT username, balance FROM users"
-    )
-    rows = cursor.fetchall()
-    if not rows:
-        await message.answer("Пользователи пока не зарегистрированы.")
+@dp.message(Command("settask"))
+async def cmd_settask(message: types.Message):
+    text = message.text.strip().replace("\n", " ")
+    if "/" not in text:
+        await message.answer("Формат команды: /settask описание задания /вознаграждение")
+    return
+    try:
+        parts = text.split("/", 1)
+        description = parts[0].replace("/settask", "").strip()
+        reward = int(parts[1].strip())
+    except Exception:
+        await message.answer("Убедись, что всё написано правильно. ^^,")
         return
-    text = "Список участников:\n"
-    for username, balance in rows:
-        display_name = f"@{username}" if username else "(без имени)"
-        text += f"{display_name} — {balance} виштокенов\n"
-    await message.answer(text)
-
+    if not description:
+        await message.answer("Описание задания не может быть пустым. :]")
+        return
+    if reward <= 0:
+        await message.answer("А почему нагрды нет никакой? :(")
+        return
+    # Сохраняем задание и увдемоляем пользователей
+    cursor.execute(
+        "INSERT INTO tasks (owner_id, description, reward) VALUES (?, ?, ?)",
+        (message.from_user.id, description, reward)
+    )
+    conn.commit()
+    await message.answer(
+        f"Задание создано:\n\n\"{description}\"\nВознаграждение: {reward} токенов."
+    )
+     cursor.execute(
+        "SELECT user_id FROM users WHERE user_id != ?",
+        (message.from_user.id,)
+    )   
+    other_users = cursor.fetchall()
+    for (user_id) in other_users:
+        await bot.send_message(
+            user_id,
+            f"@{message.from_user.username} создал новое задание. :)"
+        )        
 
 # Запуск
 async def main():
