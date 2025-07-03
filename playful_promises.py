@@ -136,12 +136,12 @@ async def cmd_settask(message: types.Message):
     if not reward_part.isdigit():
         await message.answer("А почему награды нет никакой? :(")
         return
+    if not description:
+        await message.answer("Описание задания не может быть пустым. :)")
+        return
     reward = int(reward_part)
     if reward <= 0:
         await message.answer("Вознаграждение должно быть больше нуля. :)")
-        return
-    if not description:
-        await message.answer("Описание задания не может быть пустым. :)")
         return
     # Сохраняем задание и увдемоляем пользователей
     cursor.execute(
@@ -158,10 +158,13 @@ async def cmd_settask(message: types.Message):
     )   
     other_users = cursor.fetchall()
     for (user_id) in other_users:
-        await bot.send_message(
-            user_id,
-            f"@{message.from_user.username} создал новое задание. :)"
-        )        
+        try:
+            await bot.send_message(
+                user_id,
+                f"@{message.from_user.username} создал новое задание. :)"
+            )
+        except exception as e:
+            print(f"Ошибка уведомления {used_id}. :( ")
 
 # Запуск
 async def main():
