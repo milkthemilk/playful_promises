@@ -125,7 +125,7 @@ async def cmd_give(message: types.Message):
 async def cmd_settask(message: types.Message):
     text = message.text.strip().replace("\n", " ")
     if text == "/settask":
-        await message.answer("Формат команды: /settask описание задания /вознаграждение")
+        await message.answer("Формат команды: /settask описание задания вознаграждение")
         return
     parts = text.replace("/settask", "").strip().split()
     if len(parts) < 2:
@@ -166,6 +166,35 @@ async def cmd_settask(message: types.Message):
         except exception as e:
             print(f"Ошибка уведомления {used_id}. :( ")
 
+@dp.message(Command("tasks"))
+async def cmd_tasks(message: types.Message):
+    cursor.execute(
+        """
+        SELECT t.description, t.reward, u.username, t.owner_id
+        FROM tasks t
+        LEFT JOIN users u ON t.owner_id = u.user_id
+        ORDER BY u.username, t.id
+        """
+    )
+    rows = cursor.fetchall()
+    if not rows:
+        await message.answer("Пока что заданий нет.")
+        return
+    # Группируем по пользователям
+    tasks_by_user = {}
+    for description, reward, username, owner_id in rows:
+        user_key = username if username else f"id_{owner_id}"
+        if user_key not in tasks_by_user:
+            tasks_by_user[user_key] = []
+        tasks_by_user[user_key].append((description, reward))
+    text = "Список заданий:\n\n"
+    for user, tasks in tasks_by_user.items():
+        text += f"@{user}:\n"
+        for idx, (description, reward) in enumerate(tasks, start=1):
+            text += f"{idx}. {description} (награда: {reward})\n"
+        text += "\n"
+    await message.answer(text)
+    
 # Запуск
 async def main():
     await dp.start_polling(bot)
