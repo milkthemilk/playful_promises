@@ -50,8 +50,8 @@ async def cmd_start(message: types.Message):
         "/give - начислить виштокены за хорошее поведение или выполнение задания\n"
         "/settask - добавить задание\n"
         "/tasks - посмотреть список заданий\n"
-        "/amendtask - заменить задание\n"
         "/deletetask - удалить задание\n"
+        "/amendtask - заменить задание\n"
         "/taskdone - отправить запрос о выполнении задания\n"
         "(скоро появятся другие команды)"
     )
@@ -150,7 +150,7 @@ async def cmd_settask(message: types.Message):
     )
     conn.commit()
     await message.answer(
-        f"Задание создано:\n\n\"{description}\"\nВознаграждение: {reward} токенов."
+        f"Задание создано:\n\n\"{description}\"\nВознаграждение: {reward} виштокенов."
     )
     cursor.execute(
         "SELECT user_id FROM users WHERE user_id != ?",
@@ -194,7 +194,51 @@ async def cmd_tasks(message: types.Message):
             text += f"{idx}. {description} (награда: {reward})\n"
         text += "\n"
     await message.answer(text)
-    
+
+@dp.message(Command("deletetask"))
+async def cmd_deletetask(message: types.Message):
+    text = message.text.strip().replace("\n", " ")
+    parts = text.replace("/deletetask", "").strip().split()
+    if len(parts) != 1:
+        await message.answer(
+        "Формат команды:\n"
+        "/deletetask номер\n\n"
+        "Например:\n"
+        "/deletetask 2"
+        )
+        return
+    num_part = parts[0]
+    if not num_part.isdigit():
+        await message.answer("Номер задания должен быть числом.")
+        return
+    task_num = int(num_part)
+    if task_num <= 0:
+        await message.answer("Номер задания должен быть больше нуля.")
+        return
+    # Получаем список заданий пользователя
+    cursor.execute(
+        "SELECT id, description FROM tasks WHERE owner_id = ? ORDER BY id",
+        (message.from_user.id,)
+    )
+    rows = cursor.fetchall()
+    if not rows:
+        await message.answer("У тебя нет созданных заданий.")
+        return
+    if task_num > len(rows):
+        await message.answer("Задание с таким номером не найдено.")
+        return
+    # Определяем id задачи
+    task_id, description = rows[task_num - 1]
+    # Удаляем задание
+    cursor.execute(
+        "DELETE FROM tasks WHERE id = ?",
+        (task_id,)
+    )
+    conn.commit()
+    await message.answer(
+    f"Задание №{task_num} \"{description}\" удалено."
+    )
+
 # Запуск
 async def main():
     await dp.start_polling(bot)
