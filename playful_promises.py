@@ -55,13 +55,7 @@ async def cmd_start(message: types.Message):
         "/taskdone - отправить запрос о выполнении задания\n"
         "(скоро появятся другие команды)"
     )
-    if message.from_user.username == "@milkthemilk":
-        for _ in range(2):
-            await bot.send_message(
-                message.feom_user.id,
-                "Ты безумно красива"
-            )
-
+    
 @dp.message(Command("users"))
 async def cmd_users(message: types.Message):
     cursor.execute(
@@ -244,6 +238,27 @@ async def cmd_deletetask(message: types.Message):
     await message.answer(
     f"Задание №{task_num} \"{description}\" удалено."
     )
+
+@dp.message(Command("kiss"))
+async def cmd_kiss(message: types.Message):
+    text = message.text.strip().replace("\n", " ")
+    parts = text.replace("/kiss", "").strip().split()
+    username = parts[0].lstrip("@")
+    count = int(parts[-1])
+    kiss_text = " ".join(parts[1:-1])
+    # Ищем user_id
+    cursor.execute(
+        "SELECT user_id FROM users WHERE username = ?",
+        (username,)
+    )
+    row = cursor.fetchone()
+    user_id = row[0] 
+    for _ in range(count):
+        await bot.send_message(
+            user_id,
+            kiss_text
+        )
+
 
 # Запуск
 async def main():
