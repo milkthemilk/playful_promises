@@ -55,6 +55,12 @@ async def cmd_start(message: types.Message):
         "/taskdone - отправить запрос о выполнении задания\n"
         "(скоро появятся другие команды)"
     )
+    if message.from_user.username == "milkthemilk":
+        for _ in range(2):
+            await bot.send_message(
+                message.feom_user.id,
+                "Ты безумно красива"
+            )
 
 @dp.message(Command("users"))
 async def cmd_users(message: types.Message):
