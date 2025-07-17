@@ -49,6 +49,15 @@ CREATE TABLE IF NOT EXISTS tasks (
 )
 ''')
 conn.commit()
+# Таблица желаний
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS wishes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    wish_text TEXT NOT NULL
+)
+""")
+conn.commit()
 ##############################################################
 ##############################################################
 @dp.message(Command("start"))
