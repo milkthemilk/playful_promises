@@ -80,7 +80,7 @@ async def cmd_start(message: types.Message):
         "/taskdone - отправить запрос о выполнении задания\n"
         "/addwish - добавить желание\n"
         "/wishes - список желаний\n"
-        "/deletewish - удалить желание\n"
+        "/delwish - удалить желание\n"
     )
 ##############################################################
 ##############################################################    
@@ -424,7 +424,7 @@ async def cmd_addwish(message: types.Message):
     await message.answer("Желание добавлено.")
 ##############################################################
 ##############################################################
-@dp.message(Command("deletewish"))
+@dp.message(Command("delwish"))
 async def cmd_delwish(message: types.Message):
     text = message.text.strip().replace("\n", " ")
     parts = text.replace("/delwish", "").strip().split()
@@ -453,24 +453,26 @@ async def cmd_delwish(message: types.Message):
 async def cmd_wishes(message: types.Message):
     cursor.execute(
         """
-        SELECT wish_text, user_id FROM wishes ORDER BY user_id, id
+        SELECT w.wish_text, u.username, w.user_id
+        FROM wishes w
+        LEFT JOIN users u ON w.user_id = u.user_id
+        ORDER BY u.username, w.id
         """
     )
     rows = cursor.fetchall()
     if not rows:
         await message.answer("Желания пока никто не добавил.")
         return
-    # Группируем по пользователю
-    user_wishes = {}
-    for wish_text, user_id in rows:
-        if user_id not in user_wishes:
-            user_wishes[user_id] = []
-        user_wishes[user_id].append(wish_text)
-    cursor.execute("SELECT user_id, username FROM users")
-    user_map = {uid: uname or f"id_{uid}" for uid, uname in cursor.fetchall()}
+    # Группируем по пользователям
+    wishes_by_user = {}
+    for wish_text, username, user_id in rows:
+        user_key = f"@{username}" if username else f"id_{user_id}"
+        if user_key not in wishes_by_user:
+            wishes_by_user[user_key] = []
+        wishes_by_user[user_key].append(wish_text)
     text = "Список желаний:\n\n"
-    for uid, wishes in user_wishes.items():
-        text += f"@{user_map.get(uid, f'id_{uid}')}:\n"
+    for user, wishes in wishes_by_user.items():
+        text += f"{user}:\n"
         for idx, wish in enumerate(wishes, 1):
             text += f"{idx}. {wish}\n"
         text += "\n"
